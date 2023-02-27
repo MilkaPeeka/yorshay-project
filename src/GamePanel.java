@@ -19,6 +19,8 @@ public class GamePanel extends JPanel{
 	public boolean IsGameWon=false;
 	public boolean isMultiplayer=false;
 
+	private Server server = null;
+	private Client client = null;
 	Shooting_thread shooting_thread;
 	
 	ArrayList<Ball> ballslist = new ArrayList<Ball>();
@@ -39,6 +41,27 @@ public class GamePanel extends JPanel{
 		init();
 	}
 
+	public GamePanel(String identifier){
+		this.isMultiplayer = true;
+		if (identifier.equals("SERVER")){
+			this.server = new Server(this);
+			System.out.println("Server IP:PORT		" +this.server.getServerIP() +":" +this.server.getServerPort());
+			while (server.getPeerIP() == null) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		else {
+			String[] serverDetails = identifier.split(":");
+			this.client = new Client(this, serverDetails[0], Integer.parseInt(serverDetails[1]));
+		}
+
+		init();
+	}
 	public void init(){
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		this.ScreenHeight=(int) screenSize.getHeight();
@@ -73,18 +96,7 @@ public class GamePanel extends JPanel{
 	}
 
 	// string argument = multiplayer, being either the server or the client
-	public GamePanel(String identifier){
-		if (identifier.equals("SERVER")){
-//			startServer();
-		}
 
-		else {
-			String ip;
-			int port;
-		}
-
-		init();
-	}
 
 	public void paintComponent(Graphics g)
 	{
@@ -150,6 +162,37 @@ public class GamePanel extends JPanel{
 		
 	}
 
+	public void handleMultiplayer(byte action){
+		switch (action){
+			case ActionTypes.CONNECT:
+				break;
+
+			case ActionTypes.LEFT_CLICK:
+				players[1].left = true;
+				break;
+
+			case ActionTypes.LEFT_RELEASE:
+				players[1].left = false;
+				break;
+
+			case ActionTypes.RIGHT_CLICK:
+				players[1].right = true;
+				break;
+
+			case ActionTypes.RIGHT_RELEASE:
+				players[1].right = false;
+				break;
+
+			case ActionTypes.SPACE_CLICK:
+				players[1].space = true;
+				break;
+
+			case ActionTypes.SPACE_RELEASE:
+				players[1].space = false;
+				break;
+
+		}
+	}
 
 	class KL extends KeyAdapter
 	{
@@ -163,43 +206,40 @@ public class GamePanel extends JPanel{
 			int code = e.getKeyCode();
 			if ((code == KeyEvent.VK_RIGHT) && (players[0].right == false)) {
 				players[0].right = true;
-				System.out.println("right clicked");
 				if (isMultiplayer) {
-					if (isClient)
-						client.sendClicked(1);
+					if (client != null)
+						client.sendAction(ActionTypes.RIGHT_CLICK);
 					else
-						server.sendClicked(1);
+						server.sendAction(ActionTypes.RIGHT_CLICK);
 				}
 			} else {
 				if ((code == KeyEvent.VK_LEFT) && (players[0].left == false)) {
 					players[0].left = true;
-					System.out.println("left clicked");
 					if (isMultiplayer) {
-						if (isClient)
-							client.sendClicked(1);
+						if (client != null)
+							client.sendAction(ActionTypes.LEFT_CLICK);
 						else
-							server.sendClicked(1);
+							server.sendAction(ActionTypes.LEFT_CLICK);
 					}
 				}
 
 				if ((code == KeyEvent.VK_SPACE) && (players[0].space == false)) {
 					players[0].space = true;
-					System.out.println("space clicked");
 					if (isMultiplayer) {
-						if (isClient)
-							client.sendClicked(1);
+						if (client != null)
+							client.sendAction(ActionTypes.SPACE_CLICK);
 						else
-							server.sendClicked(1);
+							server.sendAction(ActionTypes.SPACE_CLICK);
 					}
 				}
 				if ((code == KeyEvent.VK_P) && (IsGamePaused == false)) {
 					IsGamePaused = true;
 					System.out.println("game stop");
 					if (isMultiplayer){
-						if (isClient)
-							client.sendStop();
+						if (client != null)
+							client.sendAction(ActionTypes.STOP);
 						else
-							client.sendStop();
+							server.sendAction(ActionTypes.STOP);
 					}
 
 				}
@@ -207,10 +247,10 @@ public class GamePanel extends JPanel{
 					IsGamePaused = false;
 					System.out.println("game resume");
 					if (isMultiplayer){
-						if (isClient)
-							client.sendResume();
+						if (client != null)
+							client.sendAction(ActionTypes.RESUME);
 						else
-							client.sendResume();
+							server.sendAction(ActionTypes.RESUME);
 					}
 				}
 				if ((code == KeyEvent.VK_R)/*&&(IsGameOver==true)*/) {
@@ -242,24 +282,22 @@ public class GamePanel extends JPanel{
 			if((code==KeyEvent.VK_RIGHT)&&(players[0].right==true))
 			{ 
 				players[0].right=false;
-				System.out.println("right released");
 				if (isMultiplayer){
-					if (isClient)
-						client.sendReleased(1);
+					if (client != null)
+						client.sendAction(ActionTypes.RIGHT_RELEASE);
 					else
-						client.sendReleased(1);
+						server.sendAction(ActionTypes.RIGHT_RELEASE);
 				}
 			}
 			
 			if((code==KeyEvent.VK_LEFT)&&(players[0].left==true))
 			{ 
 				players[0].left=false;
-				System.out.println("left released");
 				if (isMultiplayer){
-					if (isClient)
-						client.sendReleased(1);
+					if (client != null)
+						client.sendAction(ActionTypes.LEFT_RELEASE);
 					else
-						client.sendReleased(1);
+						server.sendAction(ActionTypes.LEFT_RELEASE);
 				}
 			}
 			
@@ -267,29 +305,17 @@ public class GamePanel extends JPanel{
 			if((code==KeyEvent.VK_SPACE)&&(players[0].space==true))
 			{ 
 				players[0].space=false;
-				System.out.println("space released");
 				if (isMultiplayer){
-					if (isClient)
-						client.sendReleased(1);
+					if (client != null)
+						client.sendAction(ActionTypes.SPACE_RELEASE);
 					else
-						client.sendReleased(1);
+						server.sendAction(ActionTypes.SPACE_RELEASE);
 				}
 			}
 		}
 	}
 
-	public void handleMultiplayer(byte action){
-			switch (action){
-				case 1: // space
-					break;
 
-				case 2: // right
-					break;
-
-				case 3: // left
-					break;
-			}
-	}
 }
 
 	public void  hideMouseCursor(){
@@ -325,27 +351,15 @@ public class GamePanel extends JPanel{
 			}
 		}
 
-
-
-
-
-
-
 		f.add(bp);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setLocation(0, 0);
-		f.setSize((int)screenSize.getWidth(),(int)screenSize.getHeight());
-		f.setResizable(false);
+		f.setSize(new Dimension(1080,1080));
+		f.setResizable(true);
 		f.setVisible(true);	
 		f.setFocusable(false);
 		bp.hideMouseCursor();
 
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
 }
 
 }

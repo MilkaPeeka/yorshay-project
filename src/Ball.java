@@ -65,6 +65,12 @@ public class Ball extends Thread {
 	
 	public void run()
 	{
+		// 5 seconds timer
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		while((aliveFlag))
 		{
 		   try {
@@ -145,8 +151,7 @@ public class Ball extends Thread {
 							}
 							else
 							{
-								System.out.println("hit ball"+this.aliveFlag);
-								this.health--;   
+								this.health--;
 							}
 							
 						

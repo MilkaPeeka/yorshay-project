@@ -31,7 +31,6 @@ public class TimerThread extends Thread
 			   }
 			  else
 			   {
-				   System.out.println("boolbool");
 					this.inTime=this.t;
 			   }
 			  Thread.sleep(1000);
