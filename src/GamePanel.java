@@ -67,8 +67,7 @@ public class GamePanel extends JPanel{
 		}
 		gamemanager=new GameManager(this,this.arr[levelindex].maxballs,this.arr[levelindex].ballscapacity);
 
-		addMouseListener(new ML());
-		addMouseMotionListener(new MML());
+
 		addKeyListener(new KL (this));
 		setFocusable(true);
 	}
@@ -151,34 +150,6 @@ public class GamePanel extends JPanel{
 		
 	}
 
-	class MML extends MouseMotionAdapter 
-	{
-		/*public void mouseMoved(MouseEvent e)
-		{
-			if(!player.isPaused)
-			{
-				player.x=e.getX();
-				player.y=e.getY();
-			}
-		}*/	
-	}
-
-	class ML extends MouseAdapter
-	{
-		public void mousePressed(MouseEvent e)
-		{
-			/*int b=e.getButton();
-			if(b==MouseEvent.BUTTON1)
-			{
-				if(!player.isPaused)
-				{
-				rocketsArray[indexRockets]=new Rocket(player.x+30, player.y-15,GamePanel.this);
-				rocketsArray[indexRockets++].start();
-				}
-			}*/
-		}
-	}
-
 
 	class KL extends KeyAdapter
 	{
@@ -188,58 +159,78 @@ public class GamePanel extends JPanel{
 			this.panel=panel1;
 		}
 		
-		public void keyPressed(KeyEvent e)
-		{
-				int code=e.getKeyCode();
-				if((code==KeyEvent.VK_RIGHT)&&(players[0].right==false))
-				{ 
-					players[0].right=true;
-					System.out.println("right clicked");
+		public void keyPressed(KeyEvent e) {
+			int code = e.getKeyCode();
+			if ((code == KeyEvent.VK_RIGHT) && (players[0].right == false)) {
+				players[0].right = true;
+				System.out.println("right clicked");
+				if (isMultiplayer) {
+					if (isClient)
+						client.sendClicked(1);
+					else
+						server.sendClicked(1);
 				}
-				else
-				{
-					if((code==KeyEvent.VK_LEFT)&&(players[0].left==false))
-					{ 
-						players[0].left=true;
-						System.out.println("left clicked");
+			} else {
+				if ((code == KeyEvent.VK_LEFT) && (players[0].left == false)) {
+					players[0].left = true;
+					System.out.println("left clicked");
+					if (isMultiplayer) {
+						if (isClient)
+							client.sendClicked(1);
+						else
+							server.sendClicked(1);
 					}
 				}
-				
-				if((code==KeyEvent.VK_SPACE)&&(players[0].space==false))
-				{ 
-					players[0].space=true;
+
+				if ((code == KeyEvent.VK_SPACE) && (players[0].space == false)) {
+					players[0].space = true;
 					System.out.println("space clicked");
+					if (isMultiplayer) {
+						if (isClient)
+							client.sendClicked(1);
+						else
+							server.sendClicked(1);
+					}
 				}
-				if((code==KeyEvent.VK_P)&&(IsGamePaused==false))
-				{ 
-					IsGamePaused=true;
+				if ((code == KeyEvent.VK_P) && (IsGamePaused == false)) {
+					IsGamePaused = true;
 					System.out.println("game stop");
-					
+					if (isMultiplayer){
+						if (isClient)
+							client.sendStop();
+						else
+							client.sendStop();
+					}
+
 				}
-				if((code==KeyEvent.VK_O)&&(IsGamePaused==true))
-				{ 
-					IsGamePaused=false;
+				if ((code == KeyEvent.VK_O) && (IsGamePaused == true)) {
+					IsGamePaused = false;
 					System.out.println("game resume");
+					if (isMultiplayer){
+						if (isClient)
+							client.sendResume();
+						else
+							client.sendResume();
+					}
 				}
-				if((code==KeyEvent.VK_R)/*&&(IsGameOver==true)*/)
-				{ 
+				if ((code == KeyEvent.VK_R)/*&&(IsGameOver==true)*/) {
 					this.panel.ballslist.clear();
-					System.out.println("balllist size= "+ballslist.size());
-					this.panel.gamemanager=new GameManager(this.panel,this.panel.arr[levelindex].maxballs,this.panel.arr[levelindex].ballscapacity);
+					System.out.println("balllist size= " + ballslist.size());
+					this.panel.gamemanager = new GameManager(this.panel, this.panel.arr[levelindex].maxballs, this.panel.arr[levelindex].ballscapacity);
 					System.out.println("game start again");
-					IsGameOver=false;
-					IsGamePaused=false;
-					IsGameWon=false;	
+					IsGameOver = false;
+					IsGamePaused = false;
+					IsGameWon = false;
 				}
-				if((code==KeyEvent.VK_N)&&(IsGameWon==true))
-				{ 
+				if ((code == KeyEvent.VK_N) && (IsGameWon == true)) {
 					this.panel.ballslist.clear();
-					System.out.println("balllist size= "+ballslist.size());
+					System.out.println("balllist size= " + ballslist.size());
 					this.panel.levelindex++;
-					this.panel.gamemanager=new GameManager(this.panel,this.panel.arr[levelindex].maxballs,this.panel.arr[levelindex].ballscapacity);
+					this.panel.gamemanager = new GameManager(this.panel, this.panel.arr[levelindex].maxballs, this.panel.arr[levelindex].ballscapacity);
 					System.out.println("game start again");
-					IsGameWon=false;
+					IsGameWon = false;
 				}
+			}
 		}
 			
 		public void keyReleased(KeyEvent e)
@@ -252,12 +243,24 @@ public class GamePanel extends JPanel{
 			{ 
 				players[0].right=false;
 				System.out.println("right released");
+				if (isMultiplayer){
+					if (isClient)
+						client.sendReleased(1);
+					else
+						client.sendReleased(1);
+				}
 			}
 			
 			if((code==KeyEvent.VK_LEFT)&&(players[0].left==true))
 			{ 
 				players[0].left=false;
 				System.out.println("left released");
+				if (isMultiplayer){
+					if (isClient)
+						client.sendReleased(1);
+					else
+						client.sendReleased(1);
+				}
 			}
 			
 			
@@ -265,6 +268,12 @@ public class GamePanel extends JPanel{
 			{ 
 				players[0].space=false;
 				System.out.println("space released");
+				if (isMultiplayer){
+					if (isClient)
+						client.sendReleased(1);
+					else
+						client.sendReleased(1);
+				}
 			}
 		}
 	}
